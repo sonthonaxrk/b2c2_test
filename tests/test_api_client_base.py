@@ -1,9 +1,8 @@
-
 from unittest.mock import MagicMock
-from api_client.base_client import BaseAPIClient
+from b2c2.open_api_client import OpenAPIClient
 
 
-class APITestClient(BaseAPIClient):
+class APITestClient(OpenAPIClient):
     def __init__(self, *args, **kwargs):
         super().__init__(
             base_url='', *args, **kwargs
@@ -38,9 +37,5 @@ def test_return_type():
 
 def test_body_parameterization():
     client = APITestClient()
-
-    client._session.request().json.return_value = 1
+    client._session.request().body = 1
     assert client.get_test() == 1
-
-    client._session.request().json.return_value = 'string'
-    assert client.post_test(1) == 'string'

@@ -2,14 +2,14 @@ import ipywidgets as widgets
 from IPython import get_ipython
 from IPython.display import display
 
-from b2c2.models import SideEnum, RequestForQuote, Quote
-from b2c2.views import cell_creator
+from b2c2.models import SideEnum, RequestForQuote, Instrument
+from b2c2.views import cell_creator, BaseView
 
 
-class InstrumentView:
+class InstrumentView(BaseView):
     def __init__(self):
         # Stateful widgets
-        selector = self.selector =widgets.Select(
+        selector = self.selector = widgets.Select(
             options=[], value=None, disabled=False,
             layout=widgets.Layout(height='revert', width='100%')
         )
@@ -83,7 +83,7 @@ class InstrumentView:
         self.selector.options = instruments_response
         display(self.root)
 
-    def get_state(self):
+    def _get_state(self):
         return {
             'instrument': self.stateful_widgets['instrument'].value.name,
             'quantity': self.stateful_widgets['quantity'].value,
@@ -91,10 +91,29 @@ class InstrumentView:
             'client_rfq_id': self.stateful_widgets['client_rfq_id'].value,
         }
 
+    def instrument(self) -> Instrument:
+        """
+        :return: The selected instrument
+        """
+        return self.stateful_widgets['instrument'].value
+
+    def request_for_quote(self) -> RequestForQuote:
+        """
+        :return: The currently configured request for quote
+        """
+        state = self._get_state()
+
+        rfq = RequestForQuote(
+            **state,
+        )
+
+        rfq.bind_to_client(self._client)
+
+        return rfq
+
     def _get_quote(self, event):
-        state = self.get_state()
         quote = self._client.post_request_for_quote(
-            RequestForQuote(**state)
+            self.request_for_quote(),
         )
 
         get_ipython().user_ns['quote'] = quote

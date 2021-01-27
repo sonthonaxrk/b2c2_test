@@ -1,15 +1,14 @@
 import asyncio
 import ipywidgets as widgets
 
-from datetime import datetime
 from IPython import get_ipython
 from IPython.display import display
 
-from b2c2.models import Quote, Trade
-from b2c2.views import _create_new_cell
+from b2c2.models import Quote
+from b2c2.views import cell_creator, BaseView
 
 
-class QuoteAdapter:
+class QuoteAdapter(BaseView):
     def __init__(self, quote):
         self.quote = quote
 
@@ -37,7 +36,7 @@ class QuoteView:
             self._countdown_label.value = (
                 self._quote_adapter.get_time_left_label()
             )
-            # self._execute_trade_btn.disabled = self._quote_adapter.quote.expired
+            self._execute_trade_btn.disabled = self._quote_adapter.quote.expired  # noqa
             await asyncio.sleep(1)
 
     def display(self):
@@ -46,7 +45,7 @@ class QuoteView:
             button_style='danger',
         )
 
-        self._execute_trade_btn.on_click = self._execute_trade 
+        self._execute_trade_btn.on_click(self._execute_trade)
 
         self._executing_unit = widgets.Text(
             value='', placeholder='Optional (for user side tracking)',
@@ -69,6 +68,7 @@ class QuoteView:
                 # Basic data types
                 *self._quote_adapter.quote._widgets.values(),
                 # Our stuff
+                self._executing_unit,
                 self._execute_trade_btn,
                 self._countdown_label,
                 self._log_output,
@@ -77,22 +77,21 @@ class QuoteView:
 
     def _execute_trade(self, event):
         # Coerce to none, rather than empty string
-        print('execute_trade')
-#       executing_unit = (
-#           None if self._executing_unit.value == ''
-#           else self._executing_unit.value
-#       )
+        executing_unit = (
+            None if self._executing_unit.value == ''
+            else self._executing_unit.value
+        )
 
-#       quote = self._quote_adapter.quote
-#       trade_response = quote.execute_trade(executing_unit)
+        quote = self._quote_adapter.quote
+        trade_response = quote.execute_trade(executing_unit)
 
-#       self._log_output.append_stdout(
-#           'Trade completed. Details logged'
-#           ' in `client.history.completed_trades` \n'
-#       )
+        self._log_output.append_stdout(
+            'Trade completed. Details logged'
+            ' in `client.history.completed_trades` \n'
+        )
 
-#       get_ipython().user_ns['latest_trade'] = trade_response
-#       _create_new_cell(
-#           code='latest_trade',
-#           execute=True
-#       )
+        get_ipython().user_ns['latest_trade'] = trade_response
+        cell_creator.write(
+            code='latest_trade',
+            execute=True
+        )

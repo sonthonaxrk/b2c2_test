@@ -1,13 +1,12 @@
 import asyncio
 import warnings
-import threading
-import time
 
-from async_property import async_property
-from IPython import get_ipython
-from tornado.ioloop import IOLoop
 from ipykernel.comm import Comm
-import sys
+from IPython import get_ipython
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from b2c2.client import B2C2APIClient
 
 
 shell = get_ipython()
@@ -23,37 +22,33 @@ def _create_comm_with_confirm_resp(name):
 
     @comm.on_msg
     def on_message(msg):
-        sys.stderr.write('here\n')
-        sys.stderr.flush()
-        msgs.append(('on_message', msg))
-     #  if msg['content']['data'].get('setup'):
-     #      future.set_result(comm)
-     #      # Unset the callback
-     #      comm.on_msg(None)
+        if msg['content']['data'].get('setup'):
+            future.set_result(comm)
+            # Unset the callback
+            comm.on_msg(None)
 
     return future
 
 
-async def create_comm(name):
+async def _create_comm(name):
     """
     Create a comm channel, but wait for
     the frontend comm to communicate back.
     """
     comm = None
-
     while not comm:
         try:
             comm = await asyncio.wait_for(
                 _create_comm_with_confirm_resp(name),
-                timeout=10
+                timeout=2
             )
             if comm:
-                 return comm
+                return comm
         except asyncio.TimeoutError:
-            await asyncio.sleep(1)
+            pass
 
 
-async def get_create_cell_comm():
+async def _get_create_cell_comm():
     """
     Probably the most reliable way to establish
     communication between the Jupyter FE and the
@@ -63,13 +58,19 @@ async def get_create_cell_comm():
     """
     try:
         return await asyncio.wait_for(
-            create_comm('create_cell'), timeout=5
+            _create_comm('create_cell'), timeout=6
         )
     except asyncio.TimeoutError:
         return None
 
 
-class CellCreator:
+# I literally could not find a way to wait on this properly
+#
+# https://github.com/ipython/ipython/issues/12786
+_comm_future = asyncio.ensure_future(_get_create_cell_comm())
+
+
+class _CellCreator:
     """
     Creating a command line GUI was a real pain.
 
@@ -82,21 +83,15 @@ class CellCreator:
 
     I'm sorry if this was too much for a code test.
     """
-    def __init__(self, comm):
-        self._comm = comm
-    
-    @async_property
-    async def comm(self):
-        if self._comm is None:
-            self._comm = await get_create_cell_comm()
-        else:
-            self._comm = False
+    @property
+    def comm(self):
+        try:
+            return _comm_future.result()
+        except asyncio.InvalidStateError:
+            return None
 
-        if self._comm:
-            return self._comm
-
-    @async_property
-    async def has_extension(self):
+    @property
+    def has_extension(self):
         return bool(self.comm)
 
     @property
@@ -123,7 +118,7 @@ class CellCreator:
         shell.payload_manager.write_payload(
             dict(
                 source='set_next_input',
-                text=contents,
+                text=code,
                 replace=False,
             ),
             single=False
@@ -139,12 +134,12 @@ class CellCreator:
         shell.set_next_input(code)
 
     def write_terminal(self, code, *args):
-        raise NotImplemented(
+        raise NotImplementedError(
             'Attempt to write next output to next line in basic terminal.'
         )
 
-    async def _get_writer(self):
-        if self.has_gui and await self.has_extension:
+    def _get_writer(self):
+        if self.has_gui and self.has_extension:
             return self.write_jupyter
         elif self.has_gui:
             return self.write_jupyter_no_extension
@@ -153,13 +148,18 @@ class CellCreator:
         else:
             return self.write_terminal
 
-    async def write(self, code, execute=False):
+    def write(self, code, execute=False):
         # Async because it depends on an
         # async resource
-        writer = await self._get_writer()
+        writer = self._get_writer()
         writer(code, execute)
 
-    @classmethod
-    async def create_async(cls):
-        comm = await create_comm('create_cell')
-        return CellCreator(comm)
+
+cell_creator = _CellCreator()
+
+
+class BaseView:
+    _client: 'B2C2APIClient'
+
+    def _ipython_display_(self):
+        self.display()

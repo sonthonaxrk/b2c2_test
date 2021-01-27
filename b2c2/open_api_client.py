@@ -120,8 +120,10 @@ class OpenAPIClientMeta(type):
             # are later bound)
             method_name = cls._generate_method_name(rule)
             method = cls._wrap_request_in_annotations(rule)
-            dct[method_name] = cls._wrap_request_in_annotations(rule)
-            constructed_methods[method_name] = method
+
+            if method_name not in dct:
+                constructed_methods[method_name] = method
+                dct[method_name] = cls._wrap_request_in_annotations(rule)
 
         # This is the same the built in function type(name, bases, dict)
         return super().__new__(cls, name, bases, dct)
@@ -152,9 +154,13 @@ class OpenAPIClient(metaclass=OpenAPIClientMeta):
         # Not everything is JSON, connection errors and
         # proxy errors can return HTML. However as per
         # the spec of the API everything is JSON
-        response_body = response.json()
-        response = rule.response.parse_obj(response_body)
+        if issubclass(rule.response, BaseModel):
+            response_body = response.json()
+            response_wrapped = rule.response.parse_obj(response_body)
+            response_wrapped._client = self
+        else:
+            response_wrapped = rule.response(response.text)
+
         # TODO: find a better way of binding model
         # instances to the client
-        response._client = self
-        return response
+        return response_wrapped
