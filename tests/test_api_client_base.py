@@ -1,6 +1,6 @@
 
 from unittest.mock import MagicMock
-from api_client.client import BaseAPIClient
+from api_client.base_client import BaseAPIClient
 
 
 class APITestClient(BaseAPIClient):

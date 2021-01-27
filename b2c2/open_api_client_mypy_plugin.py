@@ -24,12 +24,13 @@ from mypy.plugin import Plugin
 from mypy.plugins.common import add_method
 from mypy.nodes import Argument, Var
 
-from api_client.client import BaseAPIClient
+from b2c2.client import OpenAPIClient
 
 
 def hook(ctx):
     # Limitation: we can't have closures around our classes
     constructed_cls = locate(ctx.cls.fullname)
+
     if getattr(constructed_cls.Meta, 'abstract', False):
         return
 
@@ -67,10 +68,9 @@ def hook(ctx):
 
 
 class APIClientPlugin(Plugin):
-
     def get_base_class_hook(self, fullname: str):
         if fullname == '.'.join([
-            BaseAPIClient.__module__, BaseAPIClient.__name__
+            OpenAPIClient.__module__, OpenAPIClient.__name__
         ]):
             return hook
 

@@ -1,6 +1,7 @@
 from typing import Any, Generator, NamedTuple
 from requests import Session
 from urllib.parse import urljoin
+from pydantic import BaseModel
 
 
 class Rule(NamedTuple):
@@ -10,7 +11,7 @@ class Rule(NamedTuple):
     body: Any
 
 
-class BaseAPIClientMeta(type):
+class OpenAPIClientMeta(type):
     """
     Metaclass for creating API clients.
 
@@ -93,7 +94,18 @@ class BaseAPIClientMeta(type):
 
     def __new__(cls, name, bases, dct):
         # Only use for subclasses
-        Meta = dct['Meta']
+        Meta = dct.get('Meta')
+
+        # If not meta class use the MRO list
+        # to get the last set meta class
+        if not Meta:
+            for base in bases:
+                if hasattr(base, 'Meta'):
+                    Meta = base.Meta
+                    break
+            else:
+                # shoudln't happen
+                raise RuntimeError('No meta class found')
 
         if getattr(Meta, 'abstract', False):
             return super().__new__(cls, name, bases, dct)
@@ -115,7 +127,7 @@ class BaseAPIClientMeta(type):
         return super().__new__(cls, name, bases, dct)
 
 
-class BaseAPIClient(metaclass=BaseAPIClientMeta):
+class OpenAPIClient(metaclass=OpenAPIClientMeta):
 
     class Meta:
         abstract = True
@@ -125,6 +137,9 @@ class BaseAPIClient(metaclass=BaseAPIClientMeta):
         self._session = Session()
 
     def _make_request(self, rule: Rule, body=None):
+        if isinstance(body, BaseModel):
+            body = body.json()
+
         response = self._session.request(
             rule.method,
             urljoin(self._base_url, rule.api_path),
@@ -134,8 +149,12 @@ class BaseAPIClient(metaclass=BaseAPIClientMeta):
         # Error handling a little bit later - that should
         # be done with hooks
 
-        # Not everything is JSON - but making the assumption
-
-        # everything is for the time being
+        # Not everything is JSON, connection errors and
+        # proxy errors can return HTML. However as per
+        # the spec of the API everything is JSON
         response_body = response.json()
-        return rule.response(response_body)
+        response = rule.response.parse_obj(response_body)
+        # TODO: find a better way of binding model
+        # instances to the client
+        response._client = self
+        return response
