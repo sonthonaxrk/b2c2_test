@@ -29,10 +29,12 @@ class QuoteSubscribeFrame(BaseModel):
     # However, I'm not entirely sure what the use
     # case for only two numbers is. So I'm going
     # to only allow one for the time being.
+
+    # TODO: validate precision
     levels: Tuple[Decimal]
     # Technically not required - but it really is
     # if you're bulding anything useful
-    tag: Optional[str]
+    tag: str
 
 
 class QuoteUnsubscribeFrame(BaseModel):

@@ -1,13 +1,14 @@
 import websockets
 import asyncio
+import uuid
 # This is a nice little pattern matching library
 # (I hate if, elif, elif, chains with a passion)
 import pampy
 
 from weakref import WeakKeyDictionary, WeakSet
-from contextlib import contextmanager
+from contextlib import asynccontextmanager
 from collections import defaultdict
-from typing import Dict, Any
+from typing import Dict, Any, Optional
 
 from b2c2.frames import (
     ErrorResponseFrame, TradableInstrumentsFrame, UsernameUpdateFrame,
@@ -15,14 +16,54 @@ from b2c2.frames import (
 )
 
 # create a queue that can create subqueues
-class Fanout(asyncio.Queue):
+class Fanout:
+    """
+    This provides fan out functionality so that
+    multiple objects can listen to an async websocket
+    stream
 
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self._listeners = WeakSet()
+    I don't really know the AsyncIO ecosystem that well
+    and every time I take a look at it I get the sense
+    it's still a bit immature. Something like this, while
+    not in the standard library should have a well known
+    library that does it. But I couldn't work out what to use.
+    """
 
+    def __init__(self, queue):
+        self._queue = queue
+        # Only the subscribing objects should
+        # have a ref to the queue
+        self._fanout_queues = WeakSet()
+        self._fanout_task = None
 
+    async def stream(self):
+        if not self._fanout_task:
+            self._fanout_task = (
+                asyncio.create_task(self._fanout_job())
+            )
 
+        queue = asyncio.Queue()
+        self._fanout_queues.add(queue)
+        
+        # tranforms a queue into an async generator
+        async def _async_gen():
+            while True:
+                yield await queue.get()
+
+        return _async_gen()
+
+    async def _fanout_job(self):
+        while True:
+            frame = await self._queue.get()
+            for queue in self._fanout_queues:
+                queue.put_nowait(frame)
+
+            # Because python is block scoped this
+            # task will keep a reference to the single
+            # queue that existed in the last fanout job
+
+            # Unless we delete it
+            del queue
 
 
 class B2C2WebsocketClient:
@@ -39,6 +80,9 @@ class B2C2WebsocketClient:
         - subscribe - stream response
         - unsubscribe - request
     """
+
+    # just for testing
+    _stream_terminate = object()
 
     # List of rules - paired (not the most readable API, but
     # it is a lot more readable, testable, and maintainable
@@ -75,10 +119,12 @@ class B2C2WebsocketClient:
             while True:
                 yield await websocket.recv()
 
-
     async def listen(self):
         async for frame in self.stream():
             # Do some pattern matching and enque the message
+            if frame == self._stream_terminate:
+                break
+
             frame_cls = self._match_frame(frame)
             frame = frame_cls(**frame)
             callback = self._resp_callbacks[frame_cls]
@@ -90,34 +136,20 @@ class B2C2WebsocketClient:
     def __init__(self, *args):
         self._resp_callbacks = WeakKeyDictionary([
             (TradableInstrumentsFrame, self._on_tradable_instrument),
+            (UsernameUpdateFrame, self._on_username_update),
         ])
 
-        # Maybe refactor this out? 
-        self._tradable_instrument_queue = asyncio.LifoQueue()
-        self._tradable_instrument_fanout_queues = WeakSet()
-        self._tradable_instrument_fanout_task = None
+        self.tradable_instruments = Fanout(asyncio.Queue())
+        self.username_updates = Fanout(asyncio.Queue())
+
 
     async def _on_tradable_instrument(self, frame: TradableInstrumentsFrame):
-        self._tradable_instrument_queue.put_nowait(frame)
+        await self.tradable_instruments._queue.put(frame)
 
-    def get_tradable_instrument_stream(self):
-        if not self._tradable_instrument_fanout_task:
-            self._tradable_instrument_fanout_task = (
-                asyncio.create_task(self._on_tradable_instrument_fanout_job())
-            )
+    async def _on_username_update(self, frame: UsernameUpdateFrame):
+        await self.username_updates._queue.put(frame)
 
-        queue = asyncio.Queue()
-        print(repr(queue))
-        self._tradable_instrument_fanout_queues.add(queue)
-        
-        async def f():
-            while True:
-                yield await queue.get()
+    @asynccontextmanager
+    async def subscribe(self, subscribe: QuoteSubscribeFrame):
 
-        return f()
 
-    async def _on_tradable_instrument_fanout_job(self):
-        while True:
-            frame = await self._tradable_instrument_queue.get()
-            for queue in self._tradable_instrument_fanout_queues:
-                queue.put_nowait(frame)
