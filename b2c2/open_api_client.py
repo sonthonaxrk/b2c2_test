@@ -156,13 +156,6 @@ class OpenAPIClient(metaclass=OpenAPIClientMeta):
                 data=body,
             )
 
-        # Basically the 'error handling'
-        # I don't think clients should do validation
-        response.raise_for_status()
-
-        # Error handling a little bit later - that should
-        # be done with hooks
-
         # Not everything is JSON, connection errors and
         # proxy errors can return HTML. However as per
         # the spec of the API everything is JSON
