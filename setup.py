@@ -1,12 +1,12 @@
 import os
 import subprocess
 
-from distutils.util import strtobool
 from setuptools import setup
 from setuptools.command.install import install
 
 
 current_dir = os.path.dirname(os.path.abspath(__file__))
+
 
 class PostInstallCommand(install):
     """
@@ -25,12 +25,12 @@ class PostInstallCommand(install):
         self.no_install_jupyter_ext = None
 
     def run(self):
-        super().run()                                             
+        super().run()
 
         if not self.no_install_jupyter_ext:
             jupyter_script = os.path.join(
                 self.install_scripts, 'jupyter-nbextension'
-            )   
+            )
 
             jupyter_extension = os.path.join(
                 current_dir, 'b2c2/b2c2_jupyter_extension.js'

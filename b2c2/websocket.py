@@ -1,17 +1,15 @@
 import websockets
 import asyncio
-import uuid
-import gc
 import weakref
 # This is a nice little pattern matching library
 # (I hate if, elif, elif, chains with a passion)
 import pampy
 import logging
 
-from weakref import WeakKeyDictionary, WeakValueDictionary, WeakSet, ref
+from weakref import WeakKeyDictionary, WeakValueDictionary, WeakSet
 from collections import defaultdict
-from contextlib import asynccontextmanager, contextmanager
-from typing import Dict, Any, Optional
+from contextlib import asynccontextmanager
+from typing import Any
 from pydantic import BaseModel
 
 from b2c2.frames import (
@@ -45,6 +43,7 @@ class Fanout:
         self._fanout_queues = WeakSet()
         self._fanout_task = None
 
+    @asynccontextmanager
     async def stream(self):
         if not self._fanout_task:
             self._fanout_task = (
@@ -53,26 +52,30 @@ class Fanout:
 
         queue = asyncio.Queue()
         self._fanout_queues.add(queue)
-        
+
         # tranforms a queue into an async generator
         async def _async_gen():
             while True:
-                yield await queue.get()
+                yield await queue.get()  # noqa
 
-        return _async_gen()
+        yield _async_gen()
+
+        del queue
 
     async def _fanout_job(self):
         while True:
             frame = await self._queue.get()
+
+            queue = None
+
             for queue in self._fanout_queues:
                 queue.put_nowait(frame)
 
             # Because python is block scoped this
             # task will keep a reference to the single
             # queue that existed in the last fanout job
-
             # Unless we delete it
-            del queue
+            del queue  # noqa
 
 
 class B2C2WebsocketClient:
@@ -103,7 +106,7 @@ class B2C2WebsocketClient:
         # Statements are checked in order (so check for errors first)
         {'event': 'tradable_instruments'},
         lambda _: TradableInstrumentsFrame,
-        
+
         {'event': 'tradable_instruments_update'},
         lambda _: TradableInstrumentsFrame,
 
@@ -155,7 +158,6 @@ class B2C2WebsocketClient:
             (QuoteSubscribeResponseFrame, self._on_tag),
             (QuoteStreamFrame, self._on_quote_price),
             # (ErrorResponseFrame, self._on_error_tag), TODO
-            
         ])
 
         self.tradable_instruments = Fanout(asyncio.Queue())
@@ -224,7 +226,7 @@ class B2C2WebsocketClient:
                     stream = await fanout.stream()
                     async for price_updates in stream:
                         print(price_updates)
-                
+
         """
         # We don't want people making multiple requests
         # to do the same thing. We need to lock a particular
@@ -266,15 +268,14 @@ class B2C2WebsocketClient:
             # a reference to it (and will still be in our WeakRefs)
             yield self._instrument_fanouts[req._key]
 
-        # We need to create it
-        else:
+        else:  # We need to create it
             async with request_lock:
                 await self._rpc_request(req)
 
             # Because we can yield the same object multiple
             # times we should only cleanup when the object
-            # is deferenced and GD'd 
-            fanout = self._instrument_fanouts[req._key] = Fanout(asyncio.Queue())
+            # is deferenced and GD'd
+            fanout = self._instrument_fanouts[req._key] = Fanout(asyncio.Queue())  # noqa
             weakref.finalize(fanout, _gc_fanout)
 
             yield self._instrument_fanouts[req._key]

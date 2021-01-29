@@ -4,9 +4,7 @@ import asyncio
 from unittest.mock import MagicMock
 from b2c2.websocket import B2C2WebsocketClient
 from b2c2.frames import QuoteSubscribeFrame, QuoteUnsubscribeFrame
-
-from b2c2.stream_utils import anext, aiter
-
+from b2c2.stream_utils import anext
 from tests.frame_examples import frames
 
 
@@ -53,21 +51,21 @@ def test_websocket_tradable_instruments():
     client.stream = frames.stream(frames_queue)
 
     async def _test():
-        tradable_instruments_stream1 = aiter(await client.tradable_instruments.stream())  # noqa
-        tradable_instruments_stream2 = aiter(await client.tradable_instruments.stream())  # noqa
+        async with client.tradable_instruments.stream() as ti_s1,\
+                   client.tradable_instruments.stream() as ti_s2:
 
-        frame = await anext(tradable_instruments_stream1)
-        assert frame.dict() == frames.tradable_instruments
+            frame = await anext(ti_s1)
+            assert frame.dict() == frames.tradable_instruments
 
-        frame = await anext(tradable_instruments_stream2)
-        assert frame.dict() == frames.tradable_instruments
+            frame = await anext(ti_s2)
+            assert frame.dict() == frames.tradable_instruments
 
-        # Simulate an object dying
-        del tradable_instruments_stream1
+            # Simulate an object dying
+            del ti_s1
 
-        # see that nothing is changed
-        frame = await anext(tradable_instruments_stream2)
-        assert frame.dict() == frames.tradable_instruments_update
+            # see that nothing is changed
+            frame = await anext(ti_s2)
+            assert frame.dict() == frames.tradable_instruments_update
 
     listen_task = loop.create_task(client.listen())
 
@@ -164,12 +162,13 @@ def test_subscribe_queues():
         loop.create_task(frames_queue.put(frames.subscribe_request_success))
         subscribe_req = QuoteSubscribeFrame(**frames.subscribe_request)
         async with client.quote_subscribe(subscribe_req) as fanout:
-            quote_stream = await fanout.stream()
-
             loop.create_task(frames_queue.put(frames.subscribe_stream_frame))
-
-            frame = await anext(quote_stream)
-            assert frame.timestamp == frames.subscribe_stream_frame['timestamp']  # noqa
+            async with fanout.stream() as stream:
+                frame = await anext(stream)
+                assert (
+                    frame.timestamp ==
+                    frames.subscribe_stream_frame['timestamp']
+                )
 
     loop.run_until_complete(
         asyncio.wait(

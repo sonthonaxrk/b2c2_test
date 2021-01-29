@@ -2,8 +2,7 @@ import uuid
 
 from pydantic import BaseModel, Field
 from decimal import Decimal
-from typing import List, Tuple, Any, Optional, Dict
-from b2c2.models import Instruments
+from typing import List, Any, Optional, Dict
 from devtools import pformat
 
 
@@ -34,7 +33,7 @@ class UsernameUpdateFrame(BaseRepsonseFrame):
 class QuoteSubscribeFrame(BaseFrame):
     event = 'subscribe'
     instrument: str
-    levels: List[Decimal] # TODO: validate precision
+    levels: List[Decimal]  # TODO: validate precision
     tag: str = Field(default_factory=lambda: str(uuid.uuid4()))
 
     @property
@@ -46,9 +45,8 @@ class QuoteSubscribeFrame(BaseFrame):
 class QuoteSubscribeResponseFrame(BaseRepsonseFrame):
     event = 'subscribe'
     instrument: str
-    levels: List[Decimal] # TODO: validate precision
-    tag: str = Field(default_factory=lambda: str(uuid.uuid4()))
-    success:bool = True
+    levels: List[Decimal]  # TODO: validate precision
+    success: bool = True
     # reset the default
     tag: Optional[str]
 
@@ -56,7 +54,7 @@ class QuoteSubscribeResponseFrame(BaseRepsonseFrame):
 class QuoteUnsubscribeFrame(BaseFrame):
     event = 'unsubscribe'
     instrument: str
-    tag: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    tag: Optional[str] = Field(default_factory=lambda: str(uuid.uuid4()))
 
 
 class QuoteUnsubscribeResponseFrame(QuoteUnsubscribeFrame):
@@ -90,7 +88,6 @@ class QuoteStreamFrame(BaseRepsonseFrame):
 
 
 class ErrorResponseFrame(BaseRepsonseFrame):
-    tag: Optional[str]
     error_code: int
     errors: Dict[str, List[Any]]
     tag: Optional[str]

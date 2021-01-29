@@ -1,10 +1,9 @@
 import asyncio
 
-from typing import List
 from weakref import WeakKeyDictionary
 from b2c2.frames import (
     ErrorResponseFrame, TradableInstrumentsFrame, UsernameUpdateFrame,
-    QuoteUnsubscribeResponseFrame, QuoteStreamFrame, 
+    QuoteUnsubscribeResponseFrame, QuoteStreamFrame,
     QuoteSubscribeResponseFrame
 )
 
@@ -98,7 +97,6 @@ class frames:
         (UsernameUpdateFrame, username_update),
     ])
 
-
     @staticmethod
     def stream(queue: asyncio.Queue):
         """
@@ -108,7 +106,7 @@ class frames:
         async def _stream():
             while True:
                 frame = await queue.get()
-                if frame == None:
+                if frame is None:
                     break
 
                 yield frame
