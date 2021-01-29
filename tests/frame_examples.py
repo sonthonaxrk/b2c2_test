@@ -4,7 +4,8 @@ from typing import List
 from weakref import WeakKeyDictionary
 from b2c2.frames import (
     ErrorResponseFrame, TradableInstrumentsFrame, UsernameUpdateFrame,
-    QuoteUnsubscribeResponseFrame, QuoteResponseFrame
+    QuoteUnsubscribeResponseFrame, QuoteStreamFrame, 
+    QuoteSubscribeResponseFrame
 )
 
 
@@ -14,13 +15,13 @@ class frames:
     (thus the lowercase classname).
     """
 
-    tradable_instruments={
+    tradable_instruments = {
         'event': 'tradable_instruments',
         'tradable_instruments': ['BTCUSD', 'BTCEUR', 'ETHEUR'],
         'success': True
     }
 
-    error_response_bad_instrument={
+    error_response_bad_instrument = {
         'event': 'subscribe',
         'success': False,
         'tag': '8c14906f-4244-4b51-86bc-553711167960',
@@ -29,7 +30,14 @@ class frames:
         'errors': {'instrument': ['Length must be 6.', 'Must be uppercase.']}
     }
 
-    subscribe_response={
+    subscribe_request = {
+        "event": "subscribe",
+        "instrument": "BTCUSD.SPOT",
+        "levels": [1, 3],
+        "tag": "8c14906f-4244-4b51-86bc-553711167960"
+    }
+
+    subscribe_stream_frame = {
         "levels": {
             "buy": [
                 {"quantity": "1", "price": "8944.4"},
@@ -42,13 +50,27 @@ class frames:
         },
         "success": True,
         "event": "price",
-        "instrument": "BTCEUR.SPOT",
+        "instrument": "BTCUSD.SPOT",
         "timestamp": 1516288053582
     }
 
-    unsub_response={
+    unsub_req = {
+      "event": "unsubscribe",
+      "instrument": "BTCUSD.SPOT",
+      "tag": "8c14906f-4244-4b51-86bc-553711167960"
+    }
+
+    unsub_response = {
         "event": "unsubscribe",
         "instrument": "BTCUSD.SPOT",
+        "tag": "8c14906f-4244-4b51-86bc-553711167960",
+        "success": True
+    }
+
+    subscribe_request_success = {
+        "event": "subscribe",
+        "instrument": "BTCUSD.SPOT",
+        "levels": [1, 3],
         "tag": "8c14906f-4244-4b51-86bc-553711167960",
         "success": True
     }
@@ -59,7 +81,7 @@ class frames:
         "success": True
     }
 
-    username_update={
+    username_update = {
         "event": "username_update",
         "old_username": "test@b2c2.com",
         "new_username": "new@b2c2.com",
@@ -69,22 +91,13 @@ class frames:
     cls_mapping = WeakKeyDictionary([
         (TradableInstrumentsFrame, tradable_instruments),
         (ErrorResponseFrame, error_response_bad_instrument),
-        (QuoteResponseFrame, subscribe_response),
+        (QuoteStreamFrame, subscribe_stream_frame),
+        (QuoteSubscribeResponseFrame, subscribe_request_success),
         (QuoteUnsubscribeResponseFrame, unsub_response),
         (TradableInstrumentsFrame, tradable_instruments),
         (UsernameUpdateFrame, username_update),
     ])
 
-    @staticmethod
-    def frame(data: dict) -> asyncio.Future:
-        """
-        Helper method for creating fake streams
-
-        A 'thunk'
-        """
-        future = asyncio.Future()
-        future.set_result(data)
-        return future
 
     @staticmethod
     def stream(queue: asyncio.Queue):

@@ -121,6 +121,8 @@ class OpenAPIClientMeta(type):
             method_name = cls._generate_method_name(rule)
             method = cls._wrap_request_in_annotations(rule)
 
+            # If it's already in the cls dct, it's probably
+            # already been bound. No need to add it to a subclass again
             if method_name not in dct:
                 constructed_methods[method_name] = method
                 dct[method_name] = cls._wrap_request_in_annotations(rule)
