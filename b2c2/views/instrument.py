@@ -84,11 +84,14 @@ class InstrumentView(BaseView):
         display(self.root)
 
     def _get_state(self):
+        client_rfq_id = self.stateful_widgets['client_rfq_id'].value
+        client_rfq_id = None if client_rfq_id == '' else client_rfq_id
+
         return {
             'instrument': self.stateful_widgets['instrument'].value.name,
             'quantity': self.stateful_widgets['quantity'].value,
             'side': self.stateful_widgets['side'].value,
-            'client_rfq_id': self.stateful_widgets['client_rfq_id'].value,
+            'client_rfq_id': client_rfq_id,
         }
 
     def instrument(self) -> Instrument:

@@ -74,8 +74,7 @@ setup(
         'websockets~=8.1',
         # Used for matching websocket frames
         'pampy~=0.3.0',
-        # Used for websocket streams
-        'aiostream~=0.4.1'
+        'asyncstdlib==3.9.0'
     ],
     extras_require={
         'gui': [
@@ -89,6 +88,7 @@ setup(
             'pytest-mypy~=0.8.0',
             'pytest-flake8~=1.0.7',
             'pytest-asyncio~=0.14.0',
+
         ]
     },
     cmdclass={

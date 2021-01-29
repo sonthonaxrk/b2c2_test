@@ -141,14 +141,24 @@ class OpenAPIClient(metaclass=OpenAPIClientMeta):
         self._session = Session()
 
     def _make_request(self, rule: Rule, body=None):
-        if isinstance(body, BaseModel):
-            body = body.json()
 
-        response = self._session.request(
-            rule.method,
-            urljoin(self._base_url, rule.api_path),
-            data=body
-        )
+        if isinstance(body, BaseModel):
+            response = self._session.request(
+                rule.method,
+                urljoin(self._base_url, rule.api_path),
+                headers={'Content-type': 'application/json'},
+                data=body.json(),
+            )
+        else:
+            response = self._session.request(
+                rule.method,
+                urljoin(self._base_url, rule.api_path),
+                data=body,
+            )
+
+        # Basically the 'error handling'
+        # I don't think clients should do validation
+        response.raise_for_status()
 
         # Error handling a little bit later - that should
         # be done with hooks

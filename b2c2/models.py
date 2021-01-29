@@ -133,22 +133,25 @@ class Balances(BaseModel, SubscriptableSchema):
     def __add__(self, trade_resp):
         new_balance = self.copy()
 
-        if trade_resp.instrument not in new_balance.__root__:
+        # Balances are 3 chars?
+        instrument_trucated = trade_resp.instrument[:3]
+
+        if instrument_trucated not in new_balance.__root__:
             raise ValueError('No matching instrument')
 
         if trade_resp.side == SideEnum.buy:
             # Add if we're buying
-            new_balance.__root__[trade_resp.instrument] += trade_resp.quantity
+            new_balance.__root__[instrument_trucated] += trade_resp.quantity
         else:
             # if we're selling
-            new_balance.__root__[trade_resp.instrument] -= trade_resp.quantity
+            new_balance.__root__[instrument_trucated] -= trade_resp.quantity
 
         return new_balance
 
 
 class RequestForQuote(BaseModel):
-    client_rfq_id: str
-    quantity: str
+    client_rfq_id: Optional[str] = None
+    quantity: Decimal
     side: SideEnum
     instrument: str
 
@@ -158,6 +161,12 @@ class RequestForQuote(BaseModel):
         :returns: the quote generated from the request for quote
         """
         return self._client.post_request_for_quote(self)
+
+    def dict(self, *args, **kwargs):
+        kwargs['exclude_none'] = True
+        res = super().dict(*args, **kwargs)
+        res['quantity'] = '{:0.4f}'.format(self.quantity)
+        return res
 
 
 class Quote(BaseModel):
@@ -205,7 +214,7 @@ class Quote(BaseModel):
         """
         return Trade(
             rfq_id=self.rfq_id,
-            quantity=self.price,
+            quantity=self.quantity,
             side=self.side,
             instrument=self.instrument,
             price=self.price,
@@ -236,6 +245,12 @@ class Trade(BaseModel):
     instrument: str
     price: Decimal
     executing_unit: Optional[str] = None
+
+    def dict(self, *args, **kwargs):
+        kwargs['exclude_none'] = True
+        res = super().dict(*args, **kwargs)
+        res['quantity'] = '{:0.4f}'.format(self.quantity)
+        return res
 
 
 class TradeResponse(BaseModel):

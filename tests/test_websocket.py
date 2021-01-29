@@ -188,8 +188,6 @@ def test_subscribe_error():
     frames_queue = asyncio.Queue()
     client.stream = frames.stream(frames_queue)
 
-    did_execute = MagicMock()
-
     async def _test():
         loop.create_task(
             frames_queue.put(frames.error_response_bad_instrument)
@@ -197,17 +195,18 @@ def test_subscribe_error():
 
         subscribe_req = QuoteSubscribeFrame(**frames.subscribe_request)
 
-        try:
-            async with client.quote_subscribe(subscribe_req):
-                pass
-        except quote_exceptions.InvalidSubscriptionRequest:
-            did_execute()
+        async with client.quote_subscribe(subscribe_req):
+            pass
+
+    task = loop.create_task(_test())
 
     loop.run_until_complete(
         asyncio.wait(
-            [client.listen(), _test()],
+            [client.listen(), task],
             return_when=asyncio.FIRST_COMPLETED
         )
     )
 
-    assert did_execute.called
+    assert (
+        type(task.exception()) == quote_exceptions.InvalidSubscriptionRequest
+    )

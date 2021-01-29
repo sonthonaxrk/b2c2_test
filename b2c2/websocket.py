@@ -1,6 +1,7 @@
 import websockets
 import asyncio
 import weakref
+import json
 # This is a nice little pattern matching library
 # (I hate if, elif, elif, chains with a passion)
 import pampy
@@ -124,7 +125,10 @@ class B2C2WebsocketClient:
         lambda _: QuoteStreamFrame,
 
         {'event': 'subscribe'},
-        lambda _: QuoteSubscribeResponseFrame
+        lambda _: QuoteSubscribeResponseFrame,
+
+        # Catch all
+        pampy._, lambda _: None,
     )
 
     @asynccontextmanager
@@ -133,17 +137,27 @@ class B2C2WebsocketClient:
             self._websocket = ws
             yield self
 
+    async def stream(self):
+        while True:
+            # TODO add error handling for when the stream
+            # is not JSON
+            yield json.loads(await self._websocket.recv())
+
     async def listen(self):
         async for frame in self.stream():
             frame_cls = self._match_frame(frame)
-            frame = frame_cls(**frame)
+            if frame_cls:
+                frame = frame_cls(**frame)
+                callback = self._resp_callbacks.get(frame_cls)
+                logger.debug(
+                    'Incoming Frame:\n %r', frame
+                )
 
-            callback = self._resp_callbacks.get(frame_cls)
-            logger.debug(
-                'Incoming Frame %s', str(frame)
-            )
-
-            await callback(frame)
+                await callback(frame)
+            else:
+                logger.error(
+                    'No handler for Frame:\n %r', frame
+                )
 
     def _match_frame(self, frame):
         return pampy.match(frame, *self._frame_matching_rules)
@@ -184,8 +198,15 @@ class B2C2WebsocketClient:
         await self.username_updates._queue.put(frame)
 
     async def _on_quote_price(self, frame: QuoteStreamFrame):
-        fanout = self._instrument_fanouts[frame._key]
-        await fanout._queue.put(frame)
+        try:
+            fanout = self._instrument_fanouts[frame._key]
+            await fanout._queue.put(frame)
+        except KeyError as e:
+            logger.info(
+                'Quote price returned without open listeners %r %r %r',
+                frame, self._instrument_fanouts.data.keys(), frame._key,
+                exc_info=e
+            )
 
     async def _on_tag(self, frame):
         # There should be two ways of resolving the
@@ -201,7 +222,9 @@ class B2C2WebsocketClient:
             else:
                 future.set_result(frame)
         else:
-            logger.error('No future for response frame')
+            logger.error(
+                'No future for response frame %r', frame
+            )
 
     async def _send_frame(self, frame: BaseModel):
         await self._websocket.send(frame.json())
@@ -287,10 +310,4 @@ class B2C2WebsocketClient:
             # is deferenced and GD'd
             fanout = self._instrument_fanouts[req._key] = Fanout(asyncio.Queue())  # noqa
             weakref.finalize(fanout, _gc_fanout)
-
             yield self._instrument_fanouts[req._key]
-            # NOTE: This ONLY removes this frame's
-            # reference to the fanout object. It is
-            # deleted when whatever is using the context
-            # manager gc'd.
-            del fanout

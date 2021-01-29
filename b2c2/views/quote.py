@@ -33,6 +33,8 @@ class QuoteView:
 
     async def _watcher(self):
         while True:
+            # NOTE: I noticed at the end of the test
+            # that quote can only be executed once.
             self._countdown_label.value = (
                 self._quote_adapter.get_time_left_label()
             )

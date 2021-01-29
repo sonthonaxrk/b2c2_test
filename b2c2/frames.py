@@ -39,7 +39,7 @@ class QuoteSubscribeFrame(BaseFrame):
 
     @property
     def _key(self):
-        levels = tuple(sorted(self.levels))
+        levels = tuple(sorted(s.normalize() for s in self.levels))
         return (levels, self.instrument)
 
 
@@ -50,6 +50,11 @@ class QuoteSubscribeResponseFrame(BaseRepsonseFrame):
     success: bool = True
     # reset the default
     tag: Optional[str]
+
+    def dict(self):
+        res = super().dict()
+        res['levels'] = [str(i.normalize()) for i in self.levels]
+        return res
 
 
 class QuoteUnsubscribeFrame(BaseFrame):
