@@ -152,12 +152,12 @@ class B2C2WebsocketClient:
         self._resp_callbacks = WeakKeyDictionary([
             (TradableInstrumentsFrame, self._on_tradable_instrument),
             (UsernameUpdateFrame, self._on_username_update),
+            (QuoteStreamFrame, self._on_quote_price),
             # These all have tags - and should have corresponding
             # futures to resolve.
             (QuoteUnsubscribeResponseFrame, self._on_tag),
             (QuoteSubscribeResponseFrame, self._on_tag),
-            (QuoteStreamFrame, self._on_quote_price),
-            # (ErrorResponseFrame, self._on_error_tag), TODO
+            (ErrorResponseFrame, self._on_tag),
         ])
 
         self.tradable_instruments = Fanout(asyncio.Queue())
@@ -189,7 +189,10 @@ class B2C2WebsocketClient:
         # Do tag first
         if frame.tag in self._pending_tags:
             future = self._pending_tags.pop(frame.tag)
-            future.set_result(frame)
+            if isinstance(frame, ErrorResponseFrame):
+                future.set_exception(frame.to_exception())
+            else:
+                future.set_result(frame)
         else:
             logger.error('No future for response frame')
 

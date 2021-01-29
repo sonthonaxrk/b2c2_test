@@ -1,4 +1,5 @@
 import uuid
+import string
 
 from pydantic import BaseModel, Field
 from decimal import Decimal
@@ -89,5 +90,13 @@ class QuoteStreamFrame(BaseRepsonseFrame):
 
 class ErrorResponseFrame(BaseRepsonseFrame):
     error_code: int
+    error_message: str
     errors: Dict[str, List[Any]]
     tag: Optional[str]
+
+    def to_exception(self):
+        from b2c2.exceptions import quote_exceptions
+        title = self.error_message.title().replace(' ', '')
+        title = title.translate(str.maketrans('', '', string.punctuation))
+        exc = getattr(quote_exceptions, title)
+        return exc(self.error_message, self)

@@ -5,6 +5,7 @@ from unittest.mock import MagicMock
 from b2c2.websocket import B2C2WebsocketClient
 from b2c2.frames import QuoteSubscribeFrame, QuoteUnsubscribeFrame
 from b2c2.stream_utils import anext
+from b2c2.exceptions import quote_exceptions
 from tests.frame_examples import frames
 
 
@@ -172,7 +173,37 @@ def test_subscribe_queues():
 
     loop.run_until_complete(
         asyncio.wait(
-            [client.listen(), asyncio.wait([_test()])],
+            [client.listen(), _test()],
             return_when=asyncio.FIRST_COMPLETED
         )
     )
+
+
+def test_subscribe_error():
+    client = B2C2WebsocketTestClient()
+    frames_queue = asyncio.Queue()
+    client.stream = frames.stream(frames_queue)
+
+    did_execute = MagicMock()
+
+    async def _test():
+        loop.create_task(
+            frames_queue.put(frames.error_response_bad_instrument)
+        )
+
+        subscribe_req = QuoteSubscribeFrame(**frames.subscribe_request)
+
+        try:
+            async with client.quote_subscribe(subscribe_req):
+                pass
+        except quote_exceptions.InvalidSubscriptionRequest:
+            did_execute()
+
+    loop.run_until_complete(
+        asyncio.wait(
+            [client.listen(), _test()],
+            return_when=asyncio.FIRST_COMPLETED
+        )
+    )
+
+    assert did_execute.called
