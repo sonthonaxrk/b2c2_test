@@ -45,6 +45,17 @@ class Fanout:
 
     @asynccontextmanager
     async def stream(self):
+        async with self.queue() as queue:
+            # tranforms a queue into an async generator
+            async def _async_gen():
+                while True:
+                    yield await queue.get()  # noqa
+
+            yield _async_gen()
+            del _async_gen
+
+    @asynccontextmanager
+    async def queue(self):
         if not self._fanout_task:
             self._fanout_task = (
                 asyncio.create_task(self._fanout_job())
@@ -52,14 +63,7 @@ class Fanout:
 
         queue = asyncio.Queue()
         self._fanout_queues.add(queue)
-
-        # tranforms a queue into an async generator
-        async def _async_gen():
-            while True:
-                yield await queue.get()  # noqa
-
-        yield _async_gen()
-
+        yield queue
         del queue
 
     async def _fanout_job(self):

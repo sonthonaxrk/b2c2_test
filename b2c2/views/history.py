@@ -8,14 +8,6 @@ from b2c2.views import BaseView
 class HistoryView(BaseView):
 
     def __init__(self):
-        self._client.history.subscribe_trades(
-            self.update_trade_view
-        )
-
-        self._client.history.subscribe_quotes(
-            self.update_quote_view
-        )
-
         self.trade_view = widgets.Box()
         self.quote_view = widgets.Box()
         self.root = widgets.Tab([
@@ -24,26 +16,20 @@ class HistoryView(BaseView):
 
         self.root.set_title(0, 'Trades')
         self.root.set_title(1, 'Quotes')
+        self._quote_task = self._client._loop.create_task(
+            self.quote_watcher()
+        )
 
-        self.update_trade_view()
+        self._trade_task = self._client._loop.create_task(
+            self.trade_watcher()
+        )
 
     def _gen_format(self, history_list):
         for item in history_list:
             yield list(item.dict().values())
 
-    def update_trade_view(self):
-        headers = [f.name for f in TradeResponse.__fields__.values()]
-
-        self.trade_view.children = [widgets.HTML(
-            value=tabulate(
-                self._gen_format(self._client.history.completed_trades),
-                headers, tablefmt="html"
-            )
-        )]
-
-    def update_quote_view(self):
+    def _update_quote_view(self):
         headers = [f.name for f in Quote.__fields__.values()]
-
         self.quote_view.children = [widgets.HTML(
             value=tabulate(
                 self._gen_format(self._client.history.quotes),
@@ -51,9 +37,36 @@ class HistoryView(BaseView):
             )
         )]
 
+    def _update_trade_view(self):
+        headers = [f.name for f in TradeResponse.__fields__.values()]
+        self.trade_view.children = [widgets.HTML(
+            value=tabulate(
+                self._gen_format(self._client.history.completed_trades),
+                headers, tablefmt="html"
+            )
+        )]
+
+    async def trade_watcher(self):
+        self._update_trade_view()
+
+        while True:
+            async with self._client.history._trade_fanout.queue() as q:
+                # New trade
+                await q.get()
+                self._update_trade_view()
+
+    async def quote_watcher(self):
+        self._update_quote_view()
+
+        while True:
+            async with self._client.history._quote_fanout.queue() as q:
+                # New quote
+                await q.get()
+                self._update_quote_view()
+
     def display(self):
         display(self.root)
 
     def __del__(self):
-        self._client.unsubscribe_trades(self.update_trade_view)
-        self._client.unsubscribe_quotes(self.update_quote_view)
+        self._quote_task.cancel()
+        self._trade_task.cancel()

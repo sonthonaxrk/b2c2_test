@@ -37,6 +37,11 @@ class BaseModel(PydanticBaseModel):
     def bind_to_client(self, client: 'B2C2APIClient') -> None:  # noqa
         self._client = client
 
+    def copy(self, *args, **kwargs):
+        new = super().copy(*args, **kwargs)
+        new._widgets_cache = None
+        return new
+
     @property
     def _widgets(self):
         # Defered property: there's no point
@@ -115,7 +120,30 @@ class Instruments(BaseModel, SubscriptableSchema):
 
 
 class Balances(BaseModel, SubscriptableSchema):
-    __root__: Dict[str, str]
+    __root__: Dict[str, Decimal]
+
+    def _get_data_widgets(self):
+        for key, value in self.__root__.items():
+            key_widget = ipywidgets.Label(f'{key}:')
+            value_widget = ipywidgets.Label(str(value))
+            yield (
+                key, ipywidgets.HBox([key_widget, value_widget])
+            )
+
+    def __add__(self, trade_resp):
+        new_balance = self.copy()
+
+        if trade_resp.instrument not in new_balance.__root__:
+            raise ValueError('No matching instrument')
+
+        if trade_resp.side == SideEnum.buy:
+            # Add if we're buying
+            new_balance.__root__[trade_resp.instrument] += trade_resp.quantity
+        else:
+            # if we're selling
+            new_balance.__root__[trade_resp.instrument] -= trade_resp.quantity
+
+        return new_balance
 
 
 class RequestForQuote(BaseModel):

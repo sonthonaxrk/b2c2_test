@@ -5,12 +5,12 @@ import os
 import uuid
 import logging
 
-from events import Events
-
 from b2c2 import __version__
+from b2c2.websocket import Fanout
 from b2c2.views.instrument import InstrumentView
 from b2c2.views.quote import QuoteView
 from b2c2.views.history import HistoryView
+from b2c2.views.balance import BalanceView
 from b2c2.open_api_client import OpenAPIClient
 from b2c2.models import (
     Instruments, RequestForQuote, Quote,
@@ -51,6 +51,7 @@ class _gui:
     instrument_selector = _gui_descriptor(InstrumentView)
     quote_executor = _gui_descriptor(QuoteView)
     history = _gui_descriptor(HistoryView)
+    balances = _gui_descriptor(BalanceView)
 
     def __init__(self, client):
         self._client = client
@@ -64,28 +65,19 @@ class History:
 
     def add_trade(self, trade: TradeResponse):
         self.completed_trades.append(trade)
-        self.events.trade_add()
+        self._trade_fanout._queue.put_nowait(trade)
 
     def add_quote(self, quote: Quote):
         self.quotes.append(quote)
-        self.events.quote_add()
-
-    def subscribe_trades(self, callback):
-        self.events.trade_add += callback
-
-    def unsubscribe_trades(self, callback):
-        self.events.trade_add -= callback
-
-    def subscribe_quotes(self, callback):
-        self.events.quote_add += callback
-
-    def unsubscribe_quotes(self, callback):
-        self.events.quote_add -= callback
+        self._quote_fanout._queue.put_nowait(quote)
 
     def __init__(self):
         self.completed_trades = []
         self.quotes = []
-        self.events = Events()
+        # If I had more time I would do some backpressure
+        # error handling.
+        self._trade_fanout = Fanout(asyncio.Queue())
+        self._quote_fanout = Fanout(asyncio.Queue())
 
 
 class B2C2AuthAdapter(requests.adapters.HTTPAdapter):

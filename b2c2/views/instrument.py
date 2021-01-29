@@ -21,7 +21,7 @@ class InstrumentView(BaseView):
         )
 
         side = widgets.RadioButtons(
-            options=[s for s in SideEnum],
+            options=[(s, s.value) for s in SideEnum],
             disabled=False, description='Side:'
         )
 

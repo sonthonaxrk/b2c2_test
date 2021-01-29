@@ -87,11 +87,9 @@ class QuoteView:
 
         self._log_output.append_stdout(
             'Trade completed. Details logged'
-            ' in `client.history.completed_trades` \n'
+            ' in `client.history.completed_trades`. '
+            'Variable `latest_trade` added to namespace.\n'
         )
 
         get_ipython().user_ns['latest_trade'] = trade_response
-        cell_creator.write(
-            code='latest_trade',
-            execute=True
-        )
+        cell_creator.write_jupyter_no_extension('latest_trade')
