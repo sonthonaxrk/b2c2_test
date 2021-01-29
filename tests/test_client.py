@@ -28,6 +28,7 @@ class BaseB2C2TestAPIClient(BaseB2C2APIClient):
         self.connection = adapter.connection
         self._session.mount('http://', adapter)
         self._session.mount('https://', adapter)
+        self._session.hooks = {'response': []}
         self._logger = MagicMock()
         self._uuid_mock = MagicMock(
             # Infinite generator of increasing str ints

@@ -23,6 +23,14 @@ Launch Jupyter:
 	$ jupyter notebook example.ipynb
 
 
+## Running tests
+
+Because this is a package for local installation I am using tox.
+
+To run the tests:
+
+	$ PYTHONPATH=$PWD tox
+
 ## GUI Usage
 
 Open up the instrument selector, and create a quote. Everything returned is and API
