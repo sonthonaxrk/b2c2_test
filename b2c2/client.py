@@ -6,6 +6,7 @@ import uuid
 import logging
 
 from b2c2 import __version__
+from b2c2.exceptions import http_exceptions
 from b2c2.websocket import Fanout
 from b2c2.views.instrument import InstrumentView
 from b2c2.views.quote import QuoteView
@@ -129,6 +130,7 @@ class BaseB2C2APIClient(OpenAPIClient):
         adapter = B2C2AuthAdapter(self)
         self._session.mount('http://', adapter)
         self._session.mount('https://', adapter)
+        self._session.hooks['response'].append(self._response_hook)
         self._logger = self._get_logger()
 
     # Exposing this for tests
@@ -141,6 +143,16 @@ class BaseB2C2APIClient(OpenAPIClient):
             'X-Request-ID': self._get_request_id(),
             'Authorization': f'Token {self._api_key}'
         }
+
+    def _response_hook(self, response, *args, **kwargs):
+        if not response.ok:
+            exc = http_exceptions.get_exception(response.status_code)(
+                'Error see in `error.error_response`', response
+            )
+            self._logger.exception('HTTP exception', exc_info=exc)
+            raise exc
+
+        return response
 
     def _get_logger(self):
         return logging.getLogger(
