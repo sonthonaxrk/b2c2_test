@@ -25,7 +25,11 @@ async def run_in(seconds, coro):
 
 class B2C2WebsocketTestClient(B2C2WebsocketClient):
     def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
+        client = MagicMock()
+        client.env = {
+            'websocket': 'wss://abc'
+        }
+        super().__init__(client, *args, **kwargs)
         websocket = MagicMock()
         websocket_calls = MagicMock()
         websocket.send.return_value = async_return(websocket_calls)

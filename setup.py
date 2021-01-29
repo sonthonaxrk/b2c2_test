@@ -3,6 +3,7 @@ import subprocess
 
 from setuptools import setup
 from setuptools.command.install import install
+from b2c2 import __version__
 
 
 current_dir = os.path.dirname(os.path.abspath(__file__))
@@ -61,7 +62,7 @@ class PostInstallCommand(install):
 
 setup(
     name='b2c2_client',
-    version='0.0.0',
+    version=__version__,
     install_requires=[
         # Used for schemas
         'pydantic~=1.7.3',

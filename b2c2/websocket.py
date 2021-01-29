@@ -125,15 +125,12 @@ class B2C2WebsocketClient:
 
     @asynccontextmanager
     async def connect(self):
-        async with websockets.connect(
-            'wss://echo.websocket.org'
-        ) as ws:
+        async with self._websocket_connect as ws:
             self._websocket = ws
             yield self
 
     async def listen(self):
         async for frame in self.stream():
-
             frame_cls = self._match_frame(frame)
             frame = frame_cls(**frame)
 
@@ -147,8 +144,14 @@ class B2C2WebsocketClient:
     def _match_frame(self, frame):
         return pampy.match(frame, *self._frame_matching_rules)
 
-    def __init__(self, *args):
+    def __init__(self, api_client):
+        self._websocket_connect = websockets.connect(
+            api_client.env['websocket'],
+            extra_headers=api_client._get_headers()
+        )
+
         self._websocket = None
+
         self._resp_callbacks = WeakKeyDictionary([
             (TradableInstrumentsFrame, self._on_tradable_instrument),
             (UsernameUpdateFrame, self._on_username_update),
