@@ -6,18 +6,26 @@ However, I refuse to do technical tests if I do not get anything out of it mysel
 The way I see it, this is my personal development time.
 
 
+## The GUI
+
+The GUI is based around some ideas I implemented for institutional clients previously.
+I found that mixing the GUI and the command line client tends to be well received. It
+lowers the barrier for entry, and integrates with a data-scientist's main tool:
+a Jupyter notebook.
+
+
 ## Why is the API client so complicated?
 
 In this exercise I tried to solve a few different problems that pertain to IPC between
 microservices; namely these:
 
-	1. API clients are repetitive to build;
+1. API clients are repetitive to build;
 
-	2. People frequently use OpenAPI as documentation rather than a formal specification;
+2. People frequently use OpenAPI as documentation rather than a formal specification;
 
-	3. It is difficult to enforce formal specifications in Python without expensive runtime checking.
+3. It is difficult to enforce formal specifications in Python without expensive runtime checking.
 
-Some companies have developed in house tools to solve these problems. For example,
+Some companies have developed in-house tools to solve these problems. For example,
 Google developed ProtocolBuffers and GRPC to solve these issues. But the developer
 experience is poor when using Python.
 
@@ -34,15 +42,3 @@ correctly (as long as the OpenAPI specification is correct).
 I can see the Trade API is deprecated in favour of the Order API; I would rather use
 what's defined in the task's specification and use the Trade API, as you might be running
 automated tests to check this work.
-
-
-
-## GUI Design
-
-Stateful elements:
-
-I am going to make the assumption that instruments won't change during a session.
-
-Getting instruments will be part of the startup procedure of the client.
-
-These will be displayed in some sort of selector.
