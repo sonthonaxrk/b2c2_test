@@ -278,6 +278,12 @@ However, error handling on the GUI is poor. I probably should have written an er
 
 I would add more tests, specifically GUI tests. Now that I am more familiar with AsyncIO, Jupyter, and IPywidgets, I would use test driven development (like I did for the api and websocket clients) to build the GUI.
 
+### Authentication
+
+API keys are not suitable for user-facing client applications. You will just get inexperienced developers compromising their Jupyter Notebooks by saving API keys in them. This is a nightmare for compliance and information security officers. I added an explicit warning in the client about this.
+
+A graceful solution I have implemented before was the OAuth2 PKCE flow. Where I start up a little HTTP server in the background to that receives the redirection callback. This allowed passwordless and keyless authentication when you create the client.
+
 ### Improving the GUI API and UX
 
 One problem is the GUI's reliance on globals. This can be a problem because the notebook will have an ephemeral state. On reflection, if I had not already submitted this test, I would make the GUI action methods asynchronous, allowing you to do something like this:
