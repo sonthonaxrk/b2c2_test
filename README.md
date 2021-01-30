@@ -17,6 +17,14 @@ This should install a Jupyter extension. This helps improve the UX. If in doubt:
 	$ jupyter nbextension install b2c2/b2c2_jupyter_extension.js
 	$ jupyter nbextension enable b2c2_jupyter_extension
 
+You can pass the authentication token to the client with an environment variable:
+
+        $ export B2C2_APIKEY="key"
+
+You can also pass it into the client like so, but throws a warning discouraging you from doing so:
+
+        $ client = B2C2APIClient(env.uat, api_key="abc")
+
 Launch Jupyter:
 
 	# GUI Examples
