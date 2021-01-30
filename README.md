@@ -38,9 +38,10 @@ Launch Jupyter:
 I  strongly recommend setting your IPython to automatically print all expressions in cells. By setting
 the config:
 
-
-	# ipython_kernel_config.py
-	c.InteractiveShell.ast_node_interactivity = 'last_expr_or_assign'
+```python
+# ipython_kernel_config.py
+c.InteractiveShell.ast_node_interactivity = 'last_expr_or_assign'
+```
 
 This file can be found in the folder:
 
@@ -79,13 +80,15 @@ Creating a quote will add `quote` into the IPython namespace, and if the Jupyter
 
 All GUI objects are normal Python objects and have methods that allow to action their current state (corresponding to their buttons). For example:
 
-	In  [1]: selector = client.gui.instrument_selector()
-	Out [1]:
-			... display gui...
+```python
+In  [1]: selector = client.gui.instrument_selector()
+Out [1]:
+		... display gui...
 			
-	In  [2]: request_for_quote = selector.request_for_quote()
-	Out [2]: 
-			... display request for quote ...
+In  [2]: request_for_quote = selector.request_for_quote()
+Out [2]: 
+		... display request for quote ...
+```
 
 #### Quote
 
@@ -95,7 +98,9 @@ Quotes are a `b2c2.model.Quote` class.
 
 The quote API has one method that corresponds to the button:
 
-	quote.execute_trade()
+```python
+quote.execute_trade()
+```
 
 Both the button and method will raise a subclass of `B2C2ClientException` if the quote is expired.
 
@@ -123,40 +128,43 @@ WebSocket client.
 Methods are generated automatically from a specification and take `pydantic` objects
 
 
+```python
+from b2c2.exceptions import B2C2ClientException
+from b2c2.models import SideEnum, RequestForQuote, Instrument
+from b2c2.client import B2C2APIClient, env
 
-	from b2c2.exceptions import B2C2ClientException
-	from b2c2.models import SideEnum, RequestForQuote, Instrument
-	from b2c2.client import B2C2APIClient, env
+client = B2C2APIClient(env.uat)
 
-	client = B2C2APIClient(env.uat)
+rfq = RequestForQuote(
+    instrument='BTCNZD.SPOT',
+    quantity='1',
+    side=SideEnum.buy,
+    client_rfq_id=None
+)
 
-	rfq = RequestForQuote(
-	    instrument='BTCNZD.SPOT',
-	    quantity='1',
-	    side=SideEnum.buy,
-	    client_rfq_id=None
-	)
-
-	# Errors example
-	try:
-	    quote = client.post_request_for_quote(rfq)
-	except B2C2ClientException:
-	    pass
-		
-	trade = quote.execute_trade()
+# Errors example
+try:
+    quote = client.post_request_for_quote(rfq)
+except B2C2ClientException:
+    pass
+	
+trade = quote.execute_trade()
+```
 	
 	
 #### Client Object
 
 To provide a custom environment and API key:
 
-	client = B2C2APIClient(
-		{
-			'rest_api': 'https://mycustomapi/',
-			'websocket': 'wss://customwebsocket/path',
-		},
-		api_key='key'
-	)
+```python
+client = B2C2APIClient(
+    {
+        'rest_api': 'https://mycustomapi/',
+        'websocket': 'wss://customwebsocket/path',
+    },
+    api_key='key'
+)
+```
 
 
 
@@ -170,49 +178,51 @@ a look at `websocket.py`.
 
 Usage:
 
-	from b2c2.frames import QuoteSubscribeFrame
-	from b2c2.websocket import B2C2WebsocketClient
-	from b2c2.client import B2C2APIClient, env
+```python
+from b2c2.frames import QuoteSubscribeFrame
+from b2c2.websocket import B2C2WebsocketClient
+from b2c2.client import B2C2APIClient, env
 
-	ws_client = B2C2WebsocketClient(B2C2APIClient(env.uat))
+ws_client = B2C2WebsocketClient(B2C2APIClient(env.uat))
 
-	loop = asyncio.get_event_loop()
-
-
-	sub = QuoteSubscribeFrame(**{
-	    "event": "subscribe",
-	    "instrument": "BTCUSD.SPOT",
-	    "levels": [1, 3],
-	})
+loop = asyncio.get_event_loop()
 
 
-	async def tradable_instruments():
-	    async with ws_client.tradable_instruments.stream() as stream:
-		async for frame in stream:
-		    # stream of instruments
-		    pass
+sub = QuoteSubscribeFrame(**{
+    "event": "subscribe",
+    "instrument": "BTCUSD.SPOT",
+    "levels": [1, 3],
+})
 
 
-	async def quote_subscribe():
-	    # Note: if multiple async tasks try to subscribe to the same
-	    # quote stream, the same object will be returned by different
-	    # context managers. Preventing concurrency issues.
-	    async with ws_client.quote_subscribe(sub) as fanout:
-	    	# Fanouts are objects that provide a stream based pub-sub 
-		async with fanout.stream() as stream:
-		    async for frame in stream:
-			# stream of quotes
-			pass
+async def tradable_instruments():
+    async with ws_client.tradable_instruments.stream() as stream:
+	async for frame in stream:
+	    # stream of instruments
+	    pass
 
 
-	async def listen():
-	    async with ws_client.connect() as ws:
-		asyncio.ensure_future(tradable_instruments())
-		asyncio.ensure_future(quote_subscribe())
-		await ws.listen()
+async def quote_subscribe():
+    # Note: if multiple async tasks try to subscribe to the same
+    # quote stream, the same object will be returned by different
+    # context managers. Preventing concurrency issues.
+    async with ws_client.quote_subscribe(sub) as fanout:
+	# Fanouts are objects that provide a stream based pub-sub 
+	async with fanout.stream() as stream:
+	    async for frame in stream:
+		# stream of quotes
+		pass
 
 
-	loop.run_until_complete(listen())
+async def listen():
+    async with ws_client.connect() as ws:
+	asyncio.ensure_future(tradable_instruments())
+	asyncio.ensure_future(quote_subscribe())
+	await ws.listen()
+
+
+loop.run_until_complete(listen())
+```
 
 
 ## Logging
@@ -225,11 +235,12 @@ they happen.
 
 To activate:
 
-	import logging
-	logger = logging.getLogger('b2c2')
-	logger.setLevel(logging.DEBUG)
-	logger.addHandler(logging.StreamHandler())
-
+```python
+import logging
+logger = logging.getLogger('b2c2')
+logger.setLevel(logging.DEBUG)
+logger.addHandler(logging.StreamHandler())
+```
 
 #### Server Side Logging and tracing
 
@@ -292,35 +303,37 @@ A graceful solution I have implemented before was the OAuth2 PKCE flow. Where I 
 One problem is the GUI's reliance on globals. This can be a problem because the notebook will have an ephemeral state. On reflection, if I had not already submitted this test, I would make the GUI action methods asynchronous, allowing you to do something like this:
 
 
-	In  [1]:
-	
-	async def quote_selection_workflow():
-		instrument_selector = client.gui.instrument_selector()
+```python
+In  [1]:
 
-		while True:
-			# Set the cell output to the instrument selector
-			display(instrument_selector)
-			
-			# Wait for user input
-			quote = await instrument_selector.request_for_quote()
-			
-			# Now set the input to the quote
-			
-			if is_quote_all_good(quote):
-				quote.execute()
-			else:
-				# Something is wrong with the quote
-				# give the user some time to review it
-				display(quote)
-				await quote.expiry_or_execution()
-				
-			# Rinse and repeat
-			
-	await quote_selection_workflow()
-	
-	Out [1]:
-	
-		.... result of display...
+async def quote_selection_workflow():
+	instrument_selector = client.gui.instrument_selector()
+
+	while True:
+		# Set the cell output to the instrument selector
+		display(instrument_selector)
 		
+		# Wait for user input
+		quote = await instrument_selector.request_for_quote()
+		
+		# Now set the input to the quote
+		
+		if is_quote_all_good(quote):
+			quote.execute()
+		else:
+			# Something is wrong with the quote
+			# give the user some time to review it
+			display(quote)
+			await quote.expiry_or_execution()
+			
+		# Rinse and repeat
+		
+await quote_selection_workflow()
+
+Out [1]:
+
+	.... result of display...
+	
+```
 
 This would constitute GUI building blocks that can be composed into workflows for traders. Something that I think could be really useful.
