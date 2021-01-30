@@ -228,9 +228,11 @@ To activate:
 	logger.addHandler(logging.StreamHandler())
 
 
+#### Server Side Logging and tracing
+
 Server logging is just as important for client-side products. This is why I include
 a unique request ID (which I would log using a `logging.Formatter`); and the version
-string.
+string, in the headers of the HTTP and Websocket requests.
 
 
 ## Why is the API client so complicated?
