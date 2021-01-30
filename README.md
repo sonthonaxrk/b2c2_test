@@ -93,12 +93,8 @@ Out [2]:
 You can also get the selected instrument using:
 
 ```python
-In  [3]: selected_instrument = instrument_selector.instrument()
+In  [3]: selected_instrument = selector.instrument()
 Out [3]:
-
-	.... gui ... 
-	
-	Or fallback to __repr__:
 
 	Instrument(
     		name='BTCUSD.CFD',
