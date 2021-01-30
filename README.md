@@ -8,7 +8,8 @@ The way I see it, this is my personal development time.
 I realise I haven't quite followed the test requirements to the letter as I did not
 create what can be stricly called a CLI, but more like a command line GUI that runs
 in IPython. I just thought that would be more useful demonstration of skills and ideas
-than a while loop with an input function.
+than a while loop with an input function. And from a product pespective, I think this
+would be more useful.
 
 ## Quickstart
 
@@ -46,9 +47,53 @@ To run the tests:
 ## GUI Usage
 
 Open up the instrument selector, and create a quote. Everything returned is and API
-object. The nice display properties are done with IPython hooks.
+object. The nice display properties are done with IPython hooks. In Jupyter they have
+GUIs, while in IPython they rely on the `__repr__` method.
 
-Things are updated live as objects are created.
+Things are updated live as objects are created. This relied on `asyncio`.
+
+#### Instrument Selector
+
+This allows you to select instruments and create quotes (monitors from the websocket wasn't implemented)
+
+![Selector](https://gist.githubusercontent.com/sonthonaxrk/01a0428bd318e477686d21a8b3135534/raw/a658fb3a0186fd842b91f657cc4721ac7c672ed1/instument_selector.png)
+
+Creating a quote will add `quote` into the IPython namespace, and if the Jupyter extension is running, it will be automatically displayed.
+
+All GUI objects are normal Python objects and have methods that allow to action their current state (corresponding to their buttons). For example:
+
+	In  [1]: selector = client.gui.instrument_selector()
+	Out [1]:
+			... display gui...
+			
+	In  [2]: request_for_quote = selector.request_for_quote()
+	Out [2]: 
+			... display request for quote ...
+
+#### Quote
+
+Quotes are normal `b2c2.model.Quote` class.
+
+![Quote](https://gist.githubusercontent.com/sonthonaxrk/01a0428bd318e477686d21a8b3135534/raw/a658fb3a0186fd842b91f657cc4721ac7c672ed1/quote.png)
+
+The quote API has one method that corresponds to the button:
+
+	quote.execute_trade()
+
+Both the button and method will raise a subclass of `B2C2ClientException` if the quote is expired.
+
+#### History
+
+![History](https://gist.githubusercontent.com/sonthonaxrk/01a0428bd318e477686d21a8b3135534/raw/a658fb3a0186fd842b91f657cc4721ac7c672ed1/history.png)
+
+This is a reflection of the `client.history` object.  This will be updated when you create a quote or a trade.
+It is not a singleton, and can be created many times (asyncio pubsub).
+
+#### Balance
+
+![Balance](https://gist.githubusercontent.com/sonthonaxrk/01a0428bd318e477686d21a8b3135534/raw/a658fb3a0186fd842b91f657cc4721ac7c672ed1/balance.png)
+
+This is a reflection of your balances. It will poll the API for updates, while also listen to the stream of new trades comming from the API (updating live).
 
 #### Monitors
 
@@ -57,7 +102,6 @@ have the time to implement the time series websocket monitor. I only wrote the
 websocket client.
 
 ## API Usage
-
 
 Methods are generated automatically from a specification and take pydantic objects
 
