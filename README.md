@@ -44,7 +44,12 @@ To run the tests:
 
 	$ PYTHONPATH=$PWD tox
 
-## GUI Usage
+## GUI
+
+The GUI is based around some ideas I implemented for institutional clients previously.
+I found that mixing the GUI and the command line client tends to be well received. It
+lowers the barrier for entry, and integrates with a data-scientist's main tool:
+a Jupyter notebook.
 
 Open up the instrument selector, and create a quote. Everything returned is and API
 object. The nice display properties are done with IPython hooks. In Jupyter they have
@@ -146,7 +151,12 @@ To provide a custom environment and API key:
 ## Websocket API
 
 I did write a websocket API that works quite well and pretty much implements all
-of it's functionality.
+of it's functionality. This was going to be for the monitor GUI element.
+
+I paid close attention to usability, memory management, and concurrency. Please do take
+a look at `websocket.py`.
+
+Usage:
 
 	ws_client = B2C2WebsocketClient(client)
 
@@ -168,7 +178,11 @@ of it's functionality.
 
 
 	async def quote_subscribe():
+	    # Note: if multiple async tasks try to subscribe to the same
+	    # quote stream, the same object will be returned by different
+	    # context managers. Preventing concurrency issues.
 	    async with ws_client.quote_subscribe(sub) as fanout:
+	    	# Fanouts are objects that provide a stream based pub-sub 
 		async with fanout.stream() as stream:
 		    async for frame in stream:
 			# stream of quotes
@@ -188,7 +202,8 @@ of it's functionality.
 ## Logging
 
 It's really hard to get a default setup that works in Jupyter nicely. But I've left
-loggers under the namespace 'b2c2'
+loggers under the namespace 'b2c2'.
+
 
 To activate:
 
@@ -198,12 +213,9 @@ To activate:
 	logger.addHandler(logging.StreamHandler())
 
 
-## The GUI
-
-The GUI is based around some ideas I implemented for institutional clients previously.
-I found that mixing the GUI and the command line client tends to be well received. It
-lowers the barrier for entry, and integrates with a data-scientist's main tool:
-a Jupyter notebook.
+Server logging is just as important for client side products. Which is why I include
+a unique request ID (which I would log using a `logging.Formatter`); and the version
+string.
 
 
 ## Why is the API client so complicated?
