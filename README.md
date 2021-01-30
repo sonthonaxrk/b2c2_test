@@ -54,7 +54,7 @@ Things are updated live as objects are created. This relied on `asyncio`.
 
 #### Instrument Selector
 
-This allows you to select instruments and create quotes (monitors from the websocket wasn't implemented)
+This allows you to select instruments and create quotes (monitors from the websocket wasn't implemented).
 
 ![Selector](https://gist.githubusercontent.com/sonthonaxrk/01a0428bd318e477686d21a8b3135534/raw/a658fb3a0186fd842b91f657cc4721ac7c672ed1/instument_selector.png)
 
