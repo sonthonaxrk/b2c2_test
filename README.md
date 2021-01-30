@@ -5,6 +5,10 @@ This is my [Rollo's] attempt at this task.
 However, I refuse to do technical tests if I do not get anything out of it myself.
 The way I see it, this is my personal development time.
 
+I realise I haven't quite followed the test requirements to the letter as I did not
+create what can be stricly called a CLI, but more like a command line GUI that runs
+in IPython. I just thought that would be more useful demonstration of skills and ideas
+than a while loop with an input function.
 
 ## Quickstart
 
@@ -19,11 +23,11 @@ This should install a Jupyter extension. This helps improve the UX. If in doubt:
 
 You can pass the authentication token to the client with an environment variable:
 
-        $ export B2C2_APIKEY="key"
+	$ export B2C2_APIKEY="key"
 
 You can also pass it into the client like so, but throws a warning discouraging you from doing so:
 
-        $ client = B2C2APIClient(env.uat, api_key="abc")
+	$ client = B2C2APIClient(env.uat, api_key="abc")
 
 Launch Jupyter:
 
