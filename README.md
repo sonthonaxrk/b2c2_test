@@ -5,10 +5,10 @@ This is my [Rollo's] attempt at this task.
 However, I refuse to do technical tests if I do not get anything out of it myself.
 The way I see it, this is my personal development time.
 
-I realise I haven't quite followed the test requirements to the letter as I did not
-create what can be stricly called a CLI, but more like a command line GUI that runs
-in IPython. I just thought that would be more useful demonstration of skills and ideas
-than a while loop with an input function. And from a product pespective, I think this
+I realize I haven't quite followed the test requirements to the letter as I did not
+create what can be strictly called a CLI, but more like a command-line GUI that runs
+in IPython. I just thought that would be a more useful demonstration of skills and ideas
+than a while loop with an input function. And from a product perspective, I think this
 would be more useful.
 
 ## Quickstart
@@ -28,7 +28,7 @@ You can pass the authentication token to the client with an environment variable
 
 You can also pass it into the client like so, but throws a warning discouraging you from doing so:
 
-	$ client = B2C2APIClient(env.uat, api_key="abc")
+	$ client = B2C2APIClient(env.uat, api_key="ABC")
 
 Launch Jupyter:
 
@@ -46,20 +46,19 @@ To run the tests:
 
 ## GUI
 
-The GUI is based around some ideas I implemented for institutional clients previously.
+The GUI is based on some ideas I implemented for institutional clients previously.
 I found that mixing the GUI and the command line client tends to be well received. It
 lowers the barrier for entry, and integrates with a data-scientist's main tool:
 a Jupyter notebook.
 
-Open up the instrument selector, and create a quote. Everything returned is and API
-object. The nice display properties are done with IPython hooks. In Jupyter they have
+Open up the instrument selector, and create a quote. Everything returned is an API object. The nice display properties are done with IPython hooks. In Jupyter they have
 GUIs, while in IPython they rely on the `__repr__` method.
 
 Things are updated live as objects are created. This relied on `asyncio`.
 
 #### Instrument Selector
 
-This allows you to select instruments and create quotes (monitors from the websocket wasn't implemented).
+This allows you to select instruments and create quotes (monitors from the WebSocket wasn't implemented).
 
 ![Selector](https://gist.githubusercontent.com/sonthonaxrk/01a0428bd318e477686d21a8b3135534/raw/a658fb3a0186fd842b91f657cc4721ac7c672ed1/instument_selector.png)
 
@@ -92,7 +91,7 @@ Both the button and method will raise a subclass of `B2C2ClientException` if the
 ![History](https://gist.githubusercontent.com/sonthonaxrk/01a0428bd318e477686d21a8b3135534/raw/a658fb3a0186fd842b91f657cc4721ac7c672ed1/history.png)
 
 This is a reflection of the `client.history` object.  This will be updated when you create a quote or a trade.
-It is not a singleton, and can be created many times (asyncio pubsub).
+It is not a singleton and can be created many times (asyncio pubsub).
 
 #### Balance
 
@@ -103,12 +102,12 @@ This is a reflection of your balances. It will poll the API for updates, while a
 #### Monitors
 
 There's a button on the instrument selector that doesn't do anything. I didn't quite
-have the time to implement the time series websocket monitor. I only wrote the
-websocket client.
+have the time to implement the time series WebSocket monitor. I only wrote the
+WebSocket client.
 
 ## API Usage
 
-Methods are generated automatically from a specification and take pydantic objects
+Methods are generated automatically from a specification and take `pydantic` objects
 
 
 
@@ -150,8 +149,8 @@ To provide a custom environment and API key:
 
 ## Websocket API
 
-I did write a websocket API that works quite well and pretty much implements all
-of it's functionality. This was going to be for the monitor GUI element.
+I did write a WebSocket API that works quite well and pretty much implements all
+of its functionality. This was going to be for the monitor GUI element.
 
 I paid close attention to usability, memory management, and concurrency. Please do take
 a look at `websocket.py`.
@@ -213,14 +212,14 @@ To activate:
 	logger.addHandler(logging.StreamHandler())
 
 
-Server logging is just as important for client side products. Which is why I include
+Server logging is just as important for client-side products. This is why I include
 a unique request ID (which I would log using a `logging.Formatter`); and the version
 string.
 
 
 ## Why is the API client so complicated?
 
-In this exercise I tried to solve a few different problems that pertain to IPC between
+In this exercise, I tried to solve a few different problems that pertain to IPC between
 microservices; namely these:
 
 1. API clients are repetitive to build;
@@ -235,8 +234,7 @@ experience is poor when using Python.
 
 My API client's base-class automatically creates typed methods from a pseudo-OpenAPI
 definition. This uses a formal definition of an API to save time. However MyPy will not
-work with dynamically created classes; and for MyPy to recognise metaprogramming, a
-plug-in is needed (this is how dataclasses, attrs, and ctypes are supported in MyPy).
+work with dynamically created classes; and for MyPy to recognize metaprogramming, a
+plug-in is needed (this is how data classes, attrs, and ctypes are supported in MyPy).
 
-With this plug-in you can use static analysis to verify you are using the API
-correctly (as long as the OpenAPI specification is correct).
+With this plug-in you can use static analysis to verify you are using the API correctly (as long as the OpenAPI specification is correct).
