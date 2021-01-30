@@ -240,3 +240,58 @@ work with dynamically created classes; and for MyPy to recognize metaprogramming
 plug-in is needed (this is how data classes, attrs, and ctypes are supported in MyPy).
 
 With this plug-in you can use static analysis to verify you are using the API correctly (as long as the OpenAPI specification is correct).
+
+
+# Ways I would improve this
+
+This is the first time I used ipywigets like this, and the first time I used asyncio (In previous projects I tended to use eventlets because of asyncio's immature ecosystem). I have also taken a break from programming for a few months, so I was a bit rusty.
+
+### Logging
+
+The logging can be improved. Loggers should have been preconfigured to write to a file that logs the client identifier (perhaps part of the API key), and requests should log the request_id.
+
+### Error handling
+
+I think error handling for the RESTful operations is okay. Raising HTTP errors is generally enough for application developers. Errors also contain the raw error response object for introspection.
+
+I also implemented decent error handling for the WebSocket client, that relies on `future.set_exeception()`.
+
+However, error handling on the GUI is poor. I probably should have written an error dialogue, and I should have caught more possible errors. Async tasks erroring out is also poorly handled (Partly because developing with AsyncIO in Jupyter was quite difficult - as the event loop runs in a different context to your cell).
+
+### Improving the GUI API and UX
+
+One problem is the GUI's reliance on globals. This can be a problem because the notebook will have an ephemeral state. On reflection, if I had not already submitted this test, I would make the GUI action methods asynchronous, allowing you to do something like this:
+
+
+	In  [1]:
+	
+	async def quote_selection_workflow():
+		instrument_selector = client.gui.instrument_selector()
+
+		while True:
+			# Set the cell output to the instrument selector
+			display(instrument_selector)
+			
+			# Wait for user input
+			quote = await instrument_selector.request_for_quote()
+			
+			# Now set the input to the quote
+			
+			if is_quote_all_good(quote):
+				quote.execute()
+			else:
+				# Something is wrong with the quote
+				# give the user some time to review it
+				display(quote)
+				await quote.expiry_or_execution()
+				
+			# Rinse and repeat
+			
+	await quote_selection_workflow()
+	
+	Out [1]:
+	
+		.... result of display...
+		
+
+This would constitute GUI building blocks that can be composed into workflows for traders. Something that I think could be really useful.
