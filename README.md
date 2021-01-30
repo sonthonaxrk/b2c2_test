@@ -282,7 +282,7 @@ I would add more tests, specifically GUI tests. Now that I am more familiar with
 
 API keys are not suitable for user-facing client applications. You will just get inexperienced developers compromising their Jupyter Notebooks by saving API keys in them. This is a nightmare for compliance and information security officers. I added an explicit warning in the client about this.
 
-A graceful solution I have implemented before was the OAuth2 PKCE flow. Where I start up a little HTTP server in the background to that receives the redirection callback. This allowed passwordless and keyless authentication when you create the client.
+A graceful solution I have implemented before was the OAuth2 PKCE flow. Where I start up a little HTTP server in the background to that receives the redirection callback. This allows passwordless and keyless authentication when you create the client.
 
 ### Improving the GUI API and UX
 
