@@ -90,6 +90,21 @@ Out [2]:
 		... display request for quote ...
 ```
 
+You can also get the selected instrument using:
+
+```python
+In  [3]: selected_instrument = instrument_selector.instrument()
+Out [3]:
+
+	.... gui ... 
+	
+	Or fallback to __repr__:
+
+	Instrument(
+    		name='BTCUSD.CFD',
+	)
+
+```
 #### Quote
 
 Quotes are a `b2c2.model.Quote` class.
