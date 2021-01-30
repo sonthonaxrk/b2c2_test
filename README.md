@@ -35,6 +35,21 @@ Launch Jupyter:
 	# GUI Examples
 	$ jupyter notebook example.ipynb
 
+## Recommended IPython Setting
+
+I  strongly recommend setting your IPython to automatically print all expressions in cells. By setting
+the config:
+
+
+	# ipython_kernel_config.py
+	c.InteractiveShell.ast_node_interactivity = 'last_expr_or_assign'
+
+This file can be found in the folder:
+
+	$ ipython locate profile
+	/Users/rollokonig-brock/.ipython/profile_default
+
+If you need help: https://ipython.org/ipython-doc/stable/config/intro.html
 
 ## Running tests
 
