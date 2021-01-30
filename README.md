@@ -272,6 +272,10 @@ I also implemented decent error handling for the WebSocket client, that relies o
 
 However, error handling on the GUI is poor. I probably should have written an error dialogue, and I should have caught more possible errors. Async tasks erroring out is also poorly handled (Partly because developing with AsyncIO in Jupyter was quite difficult - as the event loop runs in a different context to your cell).
 
+### Testing
+
+I would add more tests, specifically GUI tests. Now that I am more familiar with AsyncIO, Jupyter, and IPywidgets, I would use test driven development (like I did for the api and websocket clients) to build the GUI.
+
 ### Improving the GUI API and UX
 
 One problem is the GUI's reliance on globals. This can be a problem because the notebook will have an ephemeral state. On reflection, if I had not already submitted this test, I would make the GUI action methods asynchronous, allowing you to do something like this:
