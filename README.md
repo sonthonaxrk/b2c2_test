@@ -201,7 +201,9 @@ Usage:
 ## Logging
 
 It's really hard to get a default setup that works in Jupyter nicely. But I've left
-loggers under the namespace 'b2c2'.
+loggers under the namespace 'b2c2'. However I have included lots of warnings, which are
+better for user feedback as they can be configured to show only once, on the first time
+they happen.
 
 
 To activate:
