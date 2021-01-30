@@ -91,9 +91,9 @@ It is not a singleton, and can be created many times (asyncio pubsub).
 
 #### Balance
 
-![Balance](https://gist.githubusercontent.com/sonthonaxrk/01a0428bd318e477686d21a8b3135534/raw/a658fb3a0186fd842b91f657cc4721ac7c672ed1/balance.png)
+![Balance](https://gist.github.com/sonthonaxrk/01a0428bd318e477686d21a8b3135534/raw/463ca97272f195c2e37393b87dd95be6f1bd4775/balances.png)
 
-This is a reflection of your balances. It will poll the API for updates, while also listen to the stream of new trades comming from the API (updating live).
+This is a reflection of your balances. It will poll the API for updates, while also listening to the stream of new trades that you make using the current client.
 
 #### Monitors
 
@@ -127,6 +127,20 @@ Methods are generated automatically from a specification and take pydantic objec
 	    pass
 		
 	trade = quote.execute_trade()
+	
+	
+#### Client Object
+
+To provide a custom environment and API key:
+
+	client = B2C2APIClient(
+		{
+			'rest_api': 'https://mycustomapi/',
+			'websocket': 'wss://customwebsocket/path',
+		},
+		api_key='key'
+	)
+
 
 
 ## Websocket API
