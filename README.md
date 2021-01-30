@@ -271,6 +271,7 @@ plug-in is needed (this is how data classes, attrs, and ctypes are supported in 
 
 With this plug-in you can use static analysis to verify you are using the API correctly (as long as the OpenAPI specification is correct).
 
+Please do take a look at https://github.com/sonthonaxrk/b2c2_test/blob/master/b2c2/open_api_client_mypy_plugin.py
 
 # Ways I would improve this
 
@@ -300,7 +301,7 @@ A graceful solution I have implemented before was the OAuth2 PKCE flow. Where I 
 
 ### Improving the GUI API and UX
 
-One problem is the GUI's reliance on globals. This can be a problem because the notebook will have an ephemeral state. On reflection, if I had not already submitted this test, I would make the GUI action methods asynchronous, allowing you to do something like this:
+One problem is the GUI's reliance on injecting globals into IPython. This can be a problem because the notebook will have an ephemeral state. On reflection, if I had not already submitted this test, I would make the GUI action methods asynchronous, allowing you to do something like this:
 
 
 ```python
