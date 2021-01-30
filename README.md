@@ -1,9 +1,8 @@
 # B2C2 Exercise
 
-This is my [Rollo's] attempt at this task.
+Rollo's attempt at this task.
 
-However, I refuse to do technical tests if I do not get anything out of it myself.
-The way I see it, this is my personal development time.
+I know I may have gone too far, but I refuse to do technical tests if I do not get anything out of it myself. This is my personal development time.
 
 I realize I haven't followed the test requirements to the letter, as I did not
 create what can be strictly called a CLI, but more like a command-line GUI that runs
