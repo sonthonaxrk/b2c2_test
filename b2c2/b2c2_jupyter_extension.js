@@ -21,7 +21,6 @@ define([
         // Register target is called *every* time
         // a Comm class is created (in python). But it upserts
         // the old handler.
-        debugger;
         Jupyter.notebook.kernel.comm_manager.register_target(
             'create_cell',
             function(comm, msg) {
