@@ -90,7 +90,7 @@ All GUI objects are normal Python objects and have methods that allow to action 
 
 #### Quote
 
-Quotes are normal `b2c2.model.Quote` class.
+Quotes are a `b2c2.model.Quote` class.
 
 ![Quote](https://gist.githubusercontent.com/sonthonaxrk/01a0428bd318e477686d21a8b3135534/raw/a658fb3a0186fd842b91f657cc4721ac7c672ed1/quote.png)
 
