@@ -170,7 +170,11 @@ a look at `websocket.py`.
 
 Usage:
 
-	ws_client = B2C2WebsocketClient(client)
+	from b2c2.frames import QuoteSubscribeFrame
+	from b2c2.websocket import B2C2WebsocketClient
+	from b2c2.client import B2C2APIClient, env
+
+	ws_client = B2C2WebsocketClient(B2C2APIClient(env.uat))
 
 	loop = asyncio.get_event_loop()
 
