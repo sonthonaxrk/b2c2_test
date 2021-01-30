@@ -5,11 +5,10 @@ This is my [Rollo's] attempt at this task.
 However, I refuse to do technical tests if I do not get anything out of it myself.
 The way I see it, this is my personal development time.
 
-I realize I haven't quite followed the test requirements to the letter as I did not
+I realize I haven't followed the test requirements to the letter, as I did not
 create what can be strictly called a CLI, but more like a command-line GUI that runs
-in IPython. I just thought that would be a more useful demonstration of skills and ideas
-than a while loop with an input function. And from a product perspective, I think this
-would be more useful.
+in IPython. I just thought that would be a more useful demonstration of skills, ideas,
+and product development.
 
 ## Quickstart
 
