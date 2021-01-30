@@ -19,7 +19,7 @@ This should install a Jupyter extension. This helps improve the UX. If in doubt:
 
 Launch Jupyter:
 
-	# GUI Examplez
+	# GUI Examples
 	$ jupyter notebook example.ipynb
 
 
