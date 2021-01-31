@@ -349,3 +349,10 @@ Out [1]:
 ```
 
 This would constitute GUI building blocks that can be composed into workflows for traders. Something that I think could be really useful.
+
+##### Edit
+
+I was quite interested in making an async GUI as I think that would be an interesting way of building IPython applications. But I couldn't do any of it without patching the IPython kernel to allow asynchrous GUI events. So I wrote a little proof of concept package to that fixes that IPython problem. Hopefully that will convince the IPython maintainers to consider it.
+
+https://github.com/sonthonaxrk/async_gui_ipython_kernel
+
