@@ -91,7 +91,7 @@ setup(
 
         ]
     },
-    cmdclass={
-        'install': PostInstallCommand,
-    },
+    #cmdclass={
+    #    'install': PostInstallCommand,
+    #},
 )
